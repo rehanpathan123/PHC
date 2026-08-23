@@ -8,6 +8,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { OnlineIndicator } from './ui';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useI18n } from '../context/I18nContext';
+import GlobalVoiceAssistant from './GlobalVoiceAssistant';
 
 function navItems(role) {
   const asha = [
@@ -41,6 +43,7 @@ export function AppLayout({ children }) {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const { locale, changeLanguage, t } = useI18n();
   const items = navItems(user?.role);
 
   return (
@@ -73,8 +76,17 @@ export function AppLayout({ children }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
+            <select
+              value={locale}
+              onChange={(e) => changeLanguage(e.target.value)}
+              className="hidden sm:block text-sm border-gray-300 rounded-md bg-gray-50 focus:ring-brand focus:border-brand py-1 px-2"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी</option>
+              <option value="mr">मराठी</option>
+            </select>
             <OnlineIndicator online={online} />
-            <span className="hidden sm:block text-sm text-gray-500">{user?.name} · <span className="text-brand font-medium">{user?.role}</span></span>
+            <span className="hidden sm:block text-sm text-gray-500">{user?.name} · <span className="text-brand font-medium">{t(user?.role?.toLowerCase() === 'asha' ? 'role' : 'role') /* just a placeholder for role */}</span></span>
             <button
               onClick={logout}
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50"
@@ -118,6 +130,9 @@ export function AppLayout({ children }) {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
         {children}
       </main>
+
+      {/* Global Voice Assistant */}
+      <GlobalVoiceAssistant />
     </div>
   );
 }
