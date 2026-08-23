@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: phcsync
+      POSTGRES_USER: phcsync
+      POSTGRES_PASSWORD: phcsync_demo
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://phcsync:phcsync_demo@db:5432/phcsync
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: change-this-before-production
+      CORS_ORIGINS: http://localhost:5173
+    ports: ["8000:8000"]
+    depends_on: [db,redis]
+volumes:
+  postgres_data:
