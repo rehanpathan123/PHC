@@ -376,6 +376,29 @@ def answer_copilot_question(
         intent = "inventory_anomalies"
         context_data["anomalies"] = anomaly_detection.detect_anomalies(db, phc_id)
 
+    elif any(w in q_lower for w in ["medicine", "recommend", "patient", "symptoms", "dawa", "bukhar", "fever", "pain", "dard", "ilaaj", "treatment", "give"]):
+        intent = "medicine_recommendation"
+        # Get all medicines and their inventory across all PHCs
+        medicines = db.scalars(select(Medicine)).all()
+        inventories = db.execute(select(Inventory, PHC).join(PHC)).all()
+        
+        inventory_map = {}
+        for inv, phc in inventories:
+            if inv.medicine_id not in inventory_map:
+                inventory_map[inv.medicine_id] = []
+            if inv.quantity > 0:
+                inventory_map[inv.medicine_id].append(f"{phc.name} (Stock: {inv.quantity})")
+                
+        medicine_details = []
+        for m in medicines:
+            avail = inventory_map.get(m.id, [])
+            medicine_details.append({
+                "medicine": m.name,
+                "availability": ", ".join(avail) if avail else "Out of stock everywhere"
+            })
+            
+        context_data["medicines_and_availability"] = medicine_details
+
     elif any(w in q_lower for w in ["statistics", "stats", "today"]):
         intent = "statistics"
         # Dashboard stats
@@ -416,6 +439,8 @@ def answer_copilot_question(
         elif intent == "inventory_anomalies":
             anom = [x["medicine"] for x in context_data.get("anomalies", [])]
             answer = f"Detected {len(anom)} inventory anomalies requiring verification: {', '.join(anom) if anom else 'None'}."
+        elif intent == "medicine_recommendation":
+            answer = "I am operating in offline mode. Please refer to the PHC clinical guidelines for medicine recommendations."
         else:
             answer = "I cannot process that request while the local AI model is offline. Core application services remain active."
 

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { Send, Sparkles, AlertCircle, Bot, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Sparkles, AlertCircle, Bot, X, Mic, MicOff } from 'lucide-react';
 import { Button, Input, Card, CardHeader, CardBody } from './ui';
 import { aiApi } from '../services/api';
 import VoiceAssistanceButton from './VoiceAssistanceButton';
 
 export default function AICopilot() {
   const [question, setQuestion] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -13,6 +15,44 @@ export default function AICopilot() {
     },
   ]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = 'hi-IN'; // Defaulting to Hindi/English bilingual support
+      
+      rec.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        setQuestion((prev) => (prev ? prev + ' ' + text : text));
+      };
+      
+      rec.onend = () => setIsListening(false);
+      rec.onerror = () => setIsListening(false);
+      
+      setRecognition(rec);
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognition) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   async function handleSend(e) {
     e.preventDefault();
@@ -85,10 +125,20 @@ export default function AICopilot() {
 
         {/* Input form */}
         <form onSubmit={handleSend} className="flex gap-2">
+          <Button
+            type="button"
+            variant={isListening ? 'danger' : 'outline'}
+            onClick={toggleListening}
+            disabled={loading}
+            className="px-3"
+            title={isListening ? 'Stop recording' : 'Speak'}
+          >
+            {isListening ? <MicOff className="w-4 h-4 animate-pulse" /> : <Mic className="w-4 h-4" />}
+          </Button>
           <Input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask AI (e.g. 'Which medicines will run out this week?')"
+            placeholder="Ask AI or dictate..."
             className="flex-1"
             required
             disabled={loading}
