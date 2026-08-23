@@ -34,23 +34,43 @@ export default function VoiceAssistanceButton({ text, lang = 'en-US', className 
       const hasDevanagari = /[\u0900-\u097F]/.test(text);
       utterance.lang = hasDevanagari ? 'hi-IN' : lang;
 
-      // Find suitable voice
-      const voices = window.speechSynthesis.getVoices();
-      const targetVoice = voices.find(v => v.lang.includes(utterance.lang));
-      if (targetVoice) {
-        utterance.voice = targetVoice;
+      // Find suitable voice (handling async voice loading in some browsers)
+      let voices = window.speechSynthesis.getVoices();
+      
+      const setVoiceAndSpeak = () => {
+        voices = window.speechSynthesis.getVoices();
+        
+        // Try to find a premium/natural female voice first if available, else fallback to standard
+        const preferredVoices = voices.filter(v => 
+          v.lang.includes(utterance.lang) || 
+          (utterance.lang === 'hi-IN' && v.lang.includes('hi'))
+        );
+        
+        // Priority to Google or Natural voices
+        const targetVoice = preferredVoices.find(v => v.name.includes('Google') || v.name.includes('Natural')) 
+                          || preferredVoices[0];
+                          
+        if (targetVoice) {
+          utterance.voice = targetVoice;
+        }
+
+        utterance.onend = () => {
+          setSpeaking(false);
+        };
+
+        utterance.onerror = () => {
+          setSpeaking(false);
+        };
+
+        setSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+      };
+
+      if (voices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
+      } else {
+        setVoiceAndSpeak();
       }
-
-      utterance.onend = () => {
-        setSpeaking(false);
-      };
-
-      utterance.onerror = () => {
-        setSpeaking(false);
-      };
-
-      setSpeaking(true);
-      window.speechSynthesis.speak(utterance);
     }
   }
 
