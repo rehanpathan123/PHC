@@ -90,7 +90,16 @@ Use the following accounts to explore the platform (Password for all: `Demo@123`
 
 ## 🧠 Local AI Integration (Ollama)
 
-PHC-Sync uses a local AI decision-support layer powered by **Ollama** (Llama 3.2). 
+PHC-Sync uses a local AI decision-support layer powered by **Ollama** (Llama 3.2). We have built advanced AI-powered tools designed to assist healthcare workers dynamically:
+
+### 🌟 AI Features Implemented:
+- **🎤 Voice Assistant (Hindi/English):** ASHA workers can simply dictate the patient's condition using their voice (e.g., "Mera mareez 65 saal ka hai aur use saans lene mein takleef hai"). The AI processes the transcript and automatically maps it to structured clinical symptoms!
+- **🩺 Smart Symptom Extraction:** Uses Llama 3.2 to extract structured data (Age, Symptoms, Vitals) directly from unstructured conversational text.
+- **💡 Risk & Forecasting Explanations:** The AI generates an easy-to-understand explanation of the clinical risk score to help health workers understand *why* a patient is at HIGH or LOW risk.
+- **💬 Interactive AI Copilot:** A chat interface where ASHA workers can ask medical support questions. The Copilot is aware of the patient's current context.
+- **📋 Patient Summary Generation:** Generates quick clinical summaries of patient records.
+
+*(Note: If the Ollama server is offline, the app seamlessly falls back to offline deterministic rules and regex keyword extraction so no core functionality is lost!)*
 
 ### Setup Instructions
 1. Install [Ollama](https://ollama.com).
@@ -100,8 +109,6 @@ PHC-Sync uses a local AI decision-support layer powered by **Ollama** (Llama 3.2
    ollama pull llama3.2:3b
    ```
 4. The backend connects automatically via `http://localhost:11434`.
-
-*If Ollama is offline, PHC-Sync seamlessly falls back to its deterministic local clinical rule engines.*
 
 ---
 
